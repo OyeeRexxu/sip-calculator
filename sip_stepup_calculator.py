@@ -13,22 +13,53 @@ st.set_page_config(
 
 # ---------------- THEME & STYLING ----------------
 # Refined "Luxury Bronze" Palette
-# Primary Gold:   #BB9D63 (Metallic Gold - Brighter)
+# Primary Gold:   #BB9D63
 # Secondary Gold: #C5A059
 # Background:     Gradient #483C32 (Taupe) -> #1E1812
-# Cards:          Glassy Dark Brown
-# Text:           White & Warm Beige
 
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;700&display=swap');
 
-    /* Global App Background - "Curtain" Gradient */
+    /* Global App Background */
     .stApp {
         background: radial-gradient(circle at 50% 10%, #4D4134 0%, #1F1913 100%);
         color: #F0EAD6; /* Eggshell/Parchment */
         font-family: 'Montserrat', sans-serif;
     }
+
+    /* ---------------- NUCLEAR OPTION: HEADER REMOVAL ---------------- */
+    /* 1. Hide the entire top header bar (contains the badge, profile, hamburger menu) */
+    header, [data-testid="stHeader"] {
+        display: none !important;
+        visibility: hidden !important;
+        height: 0px !important;
+        z-index: -1 !important;
+    }
+    
+    /* 2. Hide the Toolbar (Three dots / Options menu) */
+    [data-testid="stToolbar"] {
+        display: none !important;
+        right: 9999px !important;
+    }
+    
+    /* 3. Hide Decoration (Colored line at top) */
+    [data-testid="stDecoration"] {
+        display: none !important;
+    }
+    
+    /* 4. Shift Main Content Up (Reclaim the empty space) */
+    .block-container {
+        padding-top: 1rem !important; /* Default is often 5rem+ */
+    }
+
+    /* 5. Specific Attribute Matchers (Wildcard) just in case */
+    [class*="viewerBadge"], [class*="profileContainer"], 
+    [class*="viewerBadge"] * , [class*="profileContainer"] * {
+        display: none !important;
+    }
+    /* ---------------- END NUCLEAR OPTION ---------------- */
+
 
     /* Custom Header */
     .brand-header {
@@ -60,47 +91,39 @@ st.markdown("""
         font-size: 0.75rem;
     }
     
-    /* Input Fields Background - Making them blend */
+    /* Input Fields Background */
     input.st-ai, div[data-baseweb="select"] > div {
         background-color: rgba(255, 255, 255, 0.05) !important;
         border: 1px solid rgba(212, 175, 55, 0.3) !important;
         color: white !important;
     }
     
-    /* Input Fields Border on Focus */
-    div[data-baseweb="input"]:focus-within,
-    div[data-baseweb="select"]:focus-within > div,
-    .focused, /* Catch-all for Streamlit's JS-applied focus class */
-    [class*="focused"] {
-        border-color: #BB9D63 !important;
-        box-shadow: 0 0 0 1px #BB9D63 !important;
+    /* Center "Press Enter to apply" text */
+    div[data-testid="InputInstructions"] > span {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+        text-align: center;
     }
     
-    /* Number Input +/- Buttons */
-    button[kind="secondary"] {
-        border-color: rgba(212, 175, 55, 0.3) !important;
-        color: #F0EAD6 !important;
-    }
-    button[kind="secondary"]:hover, button[kind="secondary"]:active, button[kind="secondary"]:focus {
-        border-color: #BB9D63 !important;
-        color: #BB9D63 !important;
-        background-color: rgba(187, 157, 99, 0.1) !important;
-    }
-    /* Specific target for the active/clicked state of buttons to kill the orange */
-    button[data-testid="baseButton-secondary"]:active {
-        border-color: #BB9D63 !important;
-        color: #BB9D63 !important;
+    /* User specific fix for input instruction positioning */
+    .st-emotion-cache-mi7yog {
+        bottom: 10px !important;
     }
     
-    /* Input Containers - "Glass" Effect */
+
+    
+
+    
+    /* Input Containers */
     div[data-testid="stVerticalBlockBorderWrapper"] > div > div {
-        background-color: rgba(40, 30, 20, 0.6) !important; /* Semi-transparent brown */
+        background-color: rgba(40, 30, 20, 0.6) !important;
         border: 1px solid rgba(212, 175, 55, 0.2) !important;
         backdrop-filter: blur(10px);
         border-radius: 4px;
     }
 
-    /* Metric Cards - Minimalist Luxury */
+    /* Metric Cards */
     div[data-testid="stMetric"] {
         background-color: rgba(255, 255, 255, 0.03) !important;
         border: 1px solid rgba(212, 175, 55, 0.15) !important;
@@ -110,79 +133,40 @@ st.markdown("""
     
     /* Metric Typography */
     div[data-testid="stMetric"] label[data-testid="stMetricLabel"] {
-        color: #A89F91 !important; /* Warm Gray */
+        color: #A89F91 !important;
         font-family: 'Montserrat', sans-serif;
         text-transform: uppercase;
         font-size: 0.7rem;
         letter-spacing: 1px;
     }
     div[data-testid="stMetric"] div[data-testid="stMetricValue"] {
-        color: #FDFBF7 !important; /* Off-White */
+        color: #FDFBF7 !important;
         font-family: 'Montserrat', sans-serif;
         font-weight: 500;
-        font-size: 1.2rem !important; /* Smaller font to fit values */
-        text-shadow: 0 0 10px rgba(212, 175, 55, 0.2); /* Slight Gold Glow */
+        font-size: 1.2rem !important;
+        text-shadow: 0 0 10px rgba(212, 175, 55, 0.2);
     }
 
-    /* Slider Active/Focused State */
-    div[role="slider"]:focus {
-        box-shadow: 0 0 0 2px #BB9D63 !important; /* Replace default focus ring */
-    }
 
-    /* Toggle Switches (Checkbox) */
-    /* background of the toggle switch when active */
-    div[data-baseweb="checkbox"] div[data-testid="stCheckbox"] label span[class*="checked"] {
-        background-color: #BB9D63 !important;
-        border-color: #BB9D63 !important;
-    }
-    /* The thumb of the toggle usually inherits or is white, ensuring the track is correct */
-    label[data-baseweb="checkbox"] > div:first-child {
-         background-color: #BB9D63 !important;
-    }
-    /* Targeting the specific Streamlit toggle structure more generally to catch variations */
-    .stToggle {
-        border-color: #BB9D63 !important;
-    }
+    
 
-    /* Slider Filled Track */
-    div[data-baseweb="slider"] > div > div > div:first-child {
-        background-color: #BB9D63 !important;
-    }
+
+
     
-    /* OVERRIDES FOR USER REPORTED ISSUES */
+
     
-    /* 1. Button Hover/Focus (Red Background Removal) */
-    button:hover, button:focus, button:active, 
-    button:hover:enabled, button:focus:enabled {
-        background-color: rgba(187, 157, 99, 0.1) !important;
-        border-color: #BB9D63 !important;
-        color: #BB9D63 !important;
-        outline: none !important;
-        box-shadow: none !important;
-    }
-    
-    /* 2. Slider Track Gradient (The .st-c3 linear-gradient) */
-    /* Targeting the track container specifically to override the background image/gradient */
+    /* Slider Track Background */
     div[data-baseweb="slider"] > div > div {
-        background: #483C32 !important; /* Dark brown background for empty part */
+        background: #483C32 !important;
     }
     
-    /* 3. Slider Thumb (The .st-emotion-cache-11xx4re) */
+    /* Slider Thumb */
     div[role="slider"] {
-        background-color: #BB9D63 !important;
         border: none !important;
-        box-shadow: 0 0 5px rgba(187, 157, 99, 0.5) !important;
     }
-    /* Slider Value Label (The number above the slider) */
-    div[data-baseweb="slider"] div {
-        color: #BB9D63 !important;
-    }
+
     
-    /* Divider */
-    hr {
-        border-color: #BB9D63 !important;
-        opacity: 0.2;
-    }
+
     
     /* Headers */
     h1, h2, h3, h4, h5 {
@@ -191,27 +175,9 @@ st.markdown("""
         font-weight: 500;
     }
     
-    /* HIDE STREAMLIT BRANDING / BADGE (CSS Method) */
+    /* Hide Default Elements */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
-    header {visibility: hidden;}
-    
-    /* Targeting the specific Viewer Badge classes from user request + generic */
-    ._viewerBadge_nim44_23, 
-    ._container_gzau3_1, 
-    .viewerBadge_container__1QSob,
-    div[data-testid="stDecoration"],
-    a[href*="streamlit.io/cloud"] {
-        display: none !important;
-        visibility: hidden !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
-        height: 0 !important;
-        width: 0 !important;
-        position: absolute !important;
-        top: -9999px !important;
-        left: -9999px !important;
-    }
     
 </style>
 """, unsafe_allow_html=True)
@@ -238,7 +204,8 @@ with col_input:
         stepup_pct = st.number_input("SIP Step-up per Year (%)", min_value=0.0, value=10.0, step=0.5, format="%.2f")
         lump_sum_timing = st.selectbox("Lump-sum Timing", ["Invest today (t=0)", "Invest after 1 month"], index=0)
         invest_at_beginning = st.toggle("SIP at beginning of each month (Annuity Due)", value=False)
-        show_monthly = st.toggle("Show monthly table & chart", value=True)
+        show_monthly = st.toggle("Show monthly schedule table", value=True)
+
 
 # ---------------- CALCULATION LOGIC ----------------
 months = years * 12
@@ -281,14 +248,16 @@ for m in range(1, months + 1):
         total_sip_contrib += sip_amt
     rows.append({
         "Month": m,
-        "SIP": sip_amt,
-        "Invested": total_sip_contrib + total_lumpsum_contrib,
-        "Value": balance
+        "SIP this month (₹)": sip_amt,
+        "Cumulative SIP (₹)": total_sip_contrib,
+        "Cumulative Lump-sum (₹)": total_lumpsum_contrib,
+        "Total Principal (₹)": total_sip_contrib + total_lumpsum_contrib,
+        "Estimated Value (₹)": balance
     })
 
-df = pd.DataFrame(rows) if rows else pd.DataFrame(columns=["Month","SIP","Invested","Value"])
-principal = float(df["Invested"].iloc[-1]) if not df.empty else float(lump_sum)
-future_value = float(df["Value"].iloc[-1]) if not df.empty else principal
+df = pd.DataFrame(rows) if rows else pd.DataFrame(columns=["Month","SIP this month (₹)","Cumulative SIP (₹)","Cumulative Lump-sum (₹)","Total Principal (₹)","Estimated Value (₹)"])
+principal = float(df["Total Principal (₹)"].iloc[-1]) if not df.empty else float(lump_sum)
+future_value = float(df["Estimated Value (₹)"].iloc[-1]) if not df.empty else principal
 returns = max(future_value - principal, 0.0)
 
 # ---------------- OUTPUT DISPLAY ----------------
@@ -328,10 +297,10 @@ with col_output:
         st.plotly_chart(fig_pie, use_container_width=True)
 
     with c2:
-        if show_monthly and not df.empty:
+        if not df.empty:
             st.caption("Monthly Growth".upper())
             line_fig = px.area(
-                df, x="Month", y=["Invested", "Value"],
+                df, x="Month", y=["Total Principal (₹)", "Estimated Value (₹)"],
                 labels={"value": "Amount (₹)", "variable": "Metric"},
                 color_discrete_sequence=["#5D4D3B", "#BB9D63"] # Dark Bronze vs Gold
             )
@@ -348,50 +317,87 @@ with col_output:
             )
             st.plotly_chart(line_fig, use_container_width=True)
 
-    with st.expander("Show monthly table & chart"):
-        st.dataframe(df, hide_index=True, use_container_width=True)
+    # ---------------- Monthly Growth Table ----------------
+    if show_monthly and not df.empty:
+        st.caption("Monthly Growth".upper())
+        st.dataframe(
+            df, 
+            hide_index=True, 
+            use_container_width=True,
+            column_config={
+                "SIP this month (₹)": st.column_config.NumberColumn(format="%.2f"),
+                "Cumulative SIP (₹)": st.column_config.NumberColumn(format="%.2f"),
+                "Cumulative Lump-sum (₹)": st.column_config.NumberColumn(format="%.2f"),
+                "Total Principal (₹)": st.column_config.NumberColumn(format="%.2f"),
+                "Estimated Value (₹)": st.column_config.NumberColumn(format="%.2f"),
+            }
+        )
+
+        # CSV download
+        csv = df.to_csv(index=False).encode("utf-8-sig")
+        st.download_button("Download Monthly Schedule (CSV)", csv, "sip_schedule.csv", "text/csv")
 
 
-# ---------------- BADGE REMOVAL SCRIPT (ROBUST) ----------------
+# ---------------- ELEMENTS REMOVAL SCRIPT (ROBUST + HEADER KILLER) ----------------
 components.html(
     """
     <script>
-    function removeBadge() {
+    function removeElements() {
         const doc = window.parent.document;
-        // Target all possible selectors
-        const selectors = [
+        
+        // 1. Target the Specific Nuisance Elements
+        const specificSelectors = [
             '._viewerBadge_nim44_23',
             '._container_gzau3_1',
             'a[href*="streamlit.io/cloud"]',
-            '[data-testid="stDecoration"]',
-            'div[class*="viewerBadge"]' 
+            '[class*="viewerBadge"]',
+            '._profileContainer_gzau3_53',
+            'div[class*="profileContainer"]',
+            '._profilePreview_gzau3_63',
+            '._profileImage_gzau3_78',
+            'a[href*="share.streamlit.io/user"]'
         ];
         
-        selectors.forEach(selector => {
+        // 2. Target the Entire Header Area (The Nuclear Option)
+        const nuclearSelectors = [
+            'header[data-testid="stHeader"]',
+            '[data-testid="stToolbar"]',
+            '[data-testid="stDecoration"]'
+        ];
+        
+        const allSelectors = [...specificSelectors, ...nuclearSelectors];
+        
+        allSelectors.forEach(selector => {
             const elements = doc.querySelectorAll(selector);
             elements.forEach(el => {
                 if(el) {
+                    // Hide it
                     el.style.display = 'none';
                     el.style.visibility = 'hidden';
+                    el.style.height = '0';
+                    el.style.zIndex = '-100';
+                    // Remove it
                     el.remove();
-                    // console.log("Removed:", selector);
                 }
             });
         });
+        
+        // 3. Adjust Top Padding of main container to reclaim space
+        const mainBlock = doc.querySelector('.block-container');
+        if(mainBlock) {
+             mainBlock.style.paddingTop = '1rem';
+        }
     }
 
-    // 1. Immediate interval
-    const intervalId = setInterval(removeBadge, 50);
-
-    // 2. MutationObserver (The Permanent Fix)
+    // Interval + Observer
+    const intervalId = setInterval(removeElements, 50);
     const observer = new MutationObserver((mutations) => {
-        removeBadge();
+        removeElements();
     });
-    
     observer.observe(window.parent.document.body, {childList: true, subtree: true});
 
-    // Stop interval after 30s to save resources, but keep observer
-    setTimeout(() => clearInterval(intervalId), 30000);
+    // Keep it running for a while
+    setTimeout(() => clearInterval(intervalId), 60000);
     </script>
     """,
     height=0,
