@@ -1,50 +1,158 @@
-# sip_stepup_calculator.py
+import streamlit as st
 import pandas as pd
 import plotly.express as px
-import streamlit as st
+import plotly.graph_objects as go
 
-st.set_page_config(page_title="SIP + Step-up + Lump-sum Calculator", page_icon="💹", layout="centered")
+# ---------------- CONFIGURATION ----------------
+st.set_page_config(
+    page_title="Highcrest SIP Calculator",
+    page_icon="H",
+    layout="wide"
+)
 
-st.title("💹 SIP Calculator with Lump-sum & Yearly Step-up")
-st.caption("Monthly SIP grows by a fixed % each year. Choose timing assumptions for precise estimates.")
+# ---------------- THEME & STYLING ----------------
+# Refined "Luxury Bronze" Palette
+# Primary Gold:   #BB9D63 (Metallic Gold - Brighter)
+# Secondary Gold: #C5A059
+# Background:     Gradient #483C32 (Taupe) -> #1E1812
+# Cards:          Glassy Dark Brown
+# Text:           White & Warm Beige
 
-# ---------------- Inputs ----------------
-with st.container():
-    col1, col2 = st.columns(2)
-    with col1:
+st.markdown("""
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;700&display=swap');
+
+    /* Global App Background - "Curtain" Gradient */
+    .stApp {
+        background: radial-gradient(circle at 50% 10%, #4D4134 0%, #1F1913 100%);
+        color: #F0EAD6; /* Eggshell/Parchment */
+        font-family: 'Montserrat', sans-serif;
+    }
+
+    /* Custom Header */
+    .brand-header {
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 700;
+        color: #BB9D63;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        margin-bottom: 5px;
+        text-align: center;
+        text-shadow: 0px 2px 4px rgba(0,0,0,0.3);
+    }
+    .brand-sub {
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 400;
+        color: #E0DACC;
+        text-align: center;
+        margin-bottom: 30px;
+        font-size: 0.9rem;
+        letter-spacing: 1px;
+    }
+
+    /* Input Styling */
+    .stInput > label, .stSlider > label, .stSelectbox > label, .stNumberInput > label {
+        color: #ffffff !important;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-size: 0.75rem;
+    }
+    
+    /* Input Fields Background - Making them blend */
+    input.st-ai, div[data-baseweb="select"] > div {
+        background-color: rgba(255, 255, 255, 0.05) !important;
+        border: 1px solid rgba(212, 175, 55, 0.3) !important;
+        color: white !important;
+    }
+    
+    /* Input Containers - "Glass" Effect */
+    div[data-testid="stVerticalBlockBorderWrapper"] > div > div {
+        background-color: rgba(40, 30, 20, 0.6) !important; /* Semi-transparent brown */
+        border: 1px solid rgba(212, 175, 55, 0.2) !important;
+        backdrop-filter: blur(10px);
+        border-radius: 4px;
+    }
+
+    /* Metric Cards - Minimalist Luxury */
+    div[data-testid="stMetric"] {
+        background-color: rgba(255, 255, 255, 0.03) !important;
+        border: 1px solid rgba(212, 175, 55, 0.15) !important;
+        padding: 15px;
+        border-radius: 4px;
+    }
+    
+    /* Metric Typography */
+    div[data-testid="stMetric"] label[data-testid="stMetricLabel"] {
+        color: #A89F91 !important; /* Warm Gray */
+        font-family: 'Montserrat', sans-serif;
+        text-transform: uppercase;
+        font-size: 0.7rem;
+        letter-spacing: 1px;
+    }
+    div[data-testid="stMetric"] div[data-testid="stMetricValue"] {
+        color: #FDFBF7 !important; /* Off-White */
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 500;
+        text-shadow: 0 0 10px rgba(212, 175, 55, 0.2); /* Slight Gold Glow */
+    }
+
+    /* Active Elements (Sliders/Checks) */
+    div[role="slider"] {
+        background-color: #BB9D63 !important;
+    }
+    
+    /* Divider */
+    hr {
+        border-color: #BB9D63 !important;
+        opacity: 0.2;
+    }
+    
+    /* Headers */
+    h1, h2, h3, h4, h5 {
+        color: #F0EAD6 !important;
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 500;
+    }
+    
+    /* Hide Streamlit components */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    
+</style>
+""", unsafe_allow_html=True)
+
+# ---------------- HEADER ----------------
+st.markdown('<div style="text-align: center; margin-bottom: 2.5rem;">', unsafe_allow_html=True)
+st.markdown('<h2 class="brand-header">Highcrest</h2>', unsafe_allow_html=True)
+st.markdown('<p class="brand-sub">GENERATIONAL WEALTH PLANNER</p>', unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
+
+# ---------------- LAYOUT ----------------
+col_input, col_output = st.columns([1, 2], gap="large")
+
+with col_input:
+    st.markdown("##### PARAMETERS")
+    with st.container(border=True):
         lump_sum = st.number_input("Lump-sum Investment (₹)", min_value=0, value=100000, step=5000, format="%d")
         monthly_sip = st.number_input("Base Monthly SIP (₹)", min_value=0, value=10000, step=500, format="%d")
         years = st.slider("Tenure (years)", min_value=1, max_value=40, value=15)
         annual_return_pct = st.number_input("Expected Annual Return (%)", min_value=0.0, value=12.0, step=0.1, format="%.2f")
-    with col2:
-        stepup_pct = st.number_input(
-            "SIP Step-up per Year (%)",
-            min_value=0.0,
-            value=10.0,
-            step=0.5,
-            format="%.2f"
-        )
+        
+        st.markdown("---")
+        
+        stepup_pct = st.number_input("SIP Step-up per Year (%)", min_value=0.0, value=10.0, step=0.5, format="%.2f")
+        lump_sum_timing = st.selectbox("Lump-sum Timing", ["Invest today (t=0)", "Invest after 1 month"], index=0)
         invest_at_beginning = st.toggle("SIP at beginning of each month (Annuity Due)", value=False)
-        lump_sum_timing = st.selectbox(
-            "Lump-sum Timing",
-            ["Invest today (t=0)", "Invest after 1 month"],
-            index=0,
-            help="When to apply the lump-sum contribution."
-        )
         show_monthly = st.toggle("Show monthly table & chart", value=True)
 
-st.divider()
-
-# ---------------- Core Calculations ----------------
+# ---------------- CALCULATION LOGIC ----------------
 months = years * 12
-r = (annual_return_pct / 100.0) / 12.0   # monthly rate
-g = stepup_pct / 100.0                   # annual step-up rate
+r = (annual_return_pct / 100.0) / 12.0
+g = stepup_pct / 100.0
 
 def month_sip_amount(m: int) -> float:
-    """
-    SIP amount for month m (1-indexed), stepping up annually.
-    Step-up applies at months 1, 13, 25, ...
-    """
     yr_idx = (m - 1) // 12
     return monthly_sip * ((1 + g) ** yr_idx)
 
@@ -55,86 +163,85 @@ total_lumpsum_contrib = 0.0
 
 for m in range(1, months + 1):
     sip_amt = month_sip_amount(m)
-
-    # SIP at start?
     if invest_at_beginning:
         balance += sip_amt
         total_sip_contrib += sip_amt
-
-    # Lump-sum timing
     if m == 1 and lump_sum > 0 and lump_sum_timing == "Invest today (t=0)":
         balance += lump_sum
         total_lumpsum_contrib += lump_sum
     if m == 2 and lump_sum > 0 and lump_sum_timing == "Invest after 1 month":
         balance += lump_sum
         total_lumpsum_contrib += lump_sum
-
-    # Monthly growth
     if r > 0:
         balance *= (1 + r)
-
-    # SIP at end?
     if not invest_at_beginning:
         balance += sip_amt
         total_sip_contrib += sip_amt
+    rows.append({
+        "Month": m,
+        "SIP": sip_amt,
+        "Invested": total_sip_contrib + total_lumpsum_contrib,
+        "Value": balance
+    })
 
-    rows.append(
-        {
-            "Month": m,
-            "SIP this month (₹)": round(sip_amt, 2),
-            "Cumulative SIP (₹)": round(total_sip_contrib, 2),
-            "Cumulative Lump-sum (₹)": round(total_lumpsum_contrib, 2),
-            "Total Principal (₹)": round(total_sip_contrib + total_lumpsum_contrib, 2),
-            "Estimated Value (₹)": round(balance, 2),
-        }
-    )
-
-df = pd.DataFrame(rows) if rows else pd.DataFrame(
-    columns=["Month","SIP this month (₹)","Cumulative SIP (₹)","Cumulative Lump-sum (₹)","Total Principal (₹)","Estimated Value (₹)"]
-)
-
-principal = float(df["Total Principal (₹)"].iloc[-1]) if not df.empty else float(lump_sum)
-future_value = float(df["Estimated Value (₹)"].iloc[-1]) if not df.empty else principal
+df = pd.DataFrame(rows) if rows else pd.DataFrame(columns=["Month","SIP","Invested","Value"])
+principal = float(df["Invested"].iloc[-1]) if not df.empty else float(lump_sum)
+future_value = float(df["Value"].iloc[-1]) if not df.empty else principal
 returns = max(future_value - principal, 0.0)
 
-# ---------------- KPIs ----------------
-k1, k2, k3, k4 = st.columns(4)
-k1.metric("Lump-sum Invested", f"₹ {total_lumpsum_contrib:,.0f}")
-k2.metric("Total SIP Invested", f"₹ {total_sip_contrib:,.0f}")
-k3.metric("Estimated Value", f"₹ {future_value:,.0f}")
-k4.metric("Wealth Gain (Returns)", f"₹ {returns:,.0f}")
+# ---------------- OUTPUT DISPLAY ----------------
+with col_output:
+    st.markdown("##### PROJECTION SUMMARY")
+    
+    # KPIs
+    k1, k2, k3, k4 = st.columns(4)
+    k1.metric("Lump-sum Invested", f"₹ {total_lumpsum_contrib:,.0f}")
+    k2.metric("Total SIP Invested", f"₹ {total_sip_contrib:,.0f}")
+    k3.metric("Estimated Value", f"₹ {future_value:,.0f}")
+    k4.metric("Wealth Gain (Returns)", f"₹ {returns:,.0f}")
 
-# ---------------- Pie: Principal vs Returns ----------------
-st.subheader("Principal vs Returns")
-pie_data = [
-    {"Component": "Principal", "Amount": principal},
-    {"Component": "Returns", "Amount": returns},
-]
-fig_pie = px.pie(pie_data, names="Component", values="Amount", hole=0.45)
-fig_pie.update_traces(textposition="inside", textinfo="label+percent")
-fig_pie.update_layout(margin=dict(t=10, b=10, l=10, r=10))
-st.plotly_chart(fig_pie, use_container_width=True)
+    st.markdown("") # Spacer
 
-# ---------------- Line: Growth over time ----------------
-if show_monthly and not df.empty:
-    st.subheader("Monthly Growth")
-    st.dataframe(df, hide_index=True, use_container_width=True)
+    # Charts Layout
+    c1, c2 = st.columns([1, 1.8])
+    
+    with c1:
+        st.caption("Principal vs Returns".upper())
+        pie_data = [{"Type": "Principal", "Value": principal}, {"Type": "Returns", "Value": returns}]
+        fig_pie = px.pie(
+            pie_data, names="Type", values="Value", hole=0.7,
+            color="Type",
+            color_discrete_map={"Principal": "#6B5B45", "Returns": "#BB9D63"} # muted brown vs bright gold
+        )
+        fig_pie.update_traces(textposition="outside", textinfo="label+percent")
+        fig_pie.update_layout(
+            margin=dict(t=10, b=10, l=10, r=10),
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            font=dict(color="#F0EAD6", family="Montserrat"),
+            showlegend=False
+        )
+        st.plotly_chart(fig_pie, use_container_width=True)
 
-    line_fig = px.line(
-        df,
-        x="Month",
-        y=["Total Principal (₹)", "Estimated Value (₹)"],
-        labels={"value": "Amount (₹)", "variable": "Series"},
-    )
-    line_fig.update_layout(margin=dict(t=10, b=10, l=10, r=10))
-    st.plotly_chart(line_fig, use_container_width=True)
+    with c2:
+        if show_monthly and not df.empty:
+            st.caption("Monthly Growth".upper())
+            line_fig = px.area(
+                df, x="Month", y=["Invested", "Value"],
+                labels={"value": "Amount (₹)", "variable": "Metric"},
+                color_discrete_sequence=["#5D4D3B", "#BB9D63"] # Dark Bronze vs Gold
+            )
+            line_fig.update_layout(
+                margin=dict(t=10, b=0, l=0, r=0),
+                legend=dict(orientation="h", y=1.02, x=1, xanchor="right"),
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                font=dict(color="#A89F91", family="Montserrat"),
+                xaxis=dict(showgrid=False),
+                yaxis=dict(showgrid=True, gridcolor="rgba(212, 175, 55, 0.1)"),
+                hovermode="x unified"
+            )
+            st.plotly_chart(line_fig, use_container_width=True)
 
-    # Download CSV
-    csv = df.to_csv(index=False).encode("utf-8")
-    st.download_button("Download Monthly Schedule (CSV)", csv, "sip_schedule.csv", "text/csv")
-
-# ---------------- Footer ----------------
-st.caption(
-    "Assumptions: SIP steps up once every 12 months by the specified percentage. "
-    "Returns assume constant monthly compounding at the chosen annual rate. Actual market returns will vary."
-)
+    with st.expander("Show monthly table & chart"):
+        st.dataframe(df, hide_index=True, use_container_width=True)
