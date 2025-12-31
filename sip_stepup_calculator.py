@@ -90,16 +90,24 @@ st.markdown("""
         font-size: 0.7rem;
         letter-spacing: 1px;
     }
-    div[data-testid="stMetric"] div[data-testid="stMetricValue"] {
         color: #FDFBF7 !important; /* Off-White */
         font-family: 'Montserrat', sans-serif;
         font-weight: 500;
+        font-size: 1.2rem !important; /* Smaller font to fit values */
         text-shadow: 0 0 10px rgba(212, 175, 55, 0.2); /* Slight Gold Glow */
     }
 
     /* Active Elements (Sliders/Checks) */
     div[role="slider"] {
         background-color: #BB9D63 !important;
+    }
+    /* Slider Filled Track */
+    div[data-baseweb="slider"] > div > div > div:first-child {
+        background-color: #BB9D63 !important;
+    }
+    /* Slider Value Label (The number above the slider) */
+    div[data-baseweb="slider"] div {
+        color: #BB9D63 !important;
     }
     
     /* Divider */
@@ -152,6 +160,15 @@ months = years * 12
 r = (annual_return_pct / 100.0) / 12.0
 g = stepup_pct / 100.0
 
+def format_indian_currency(n):
+    n = float(n)
+    if n >= 10000000:
+        return f"₹ {n/10000000:.2f} Cr"
+    elif n >= 100000:
+        return f"₹ {n/100000:.2f} L"
+    else:
+        return f"₹ {n:,.0f}"
+
 def month_sip_amount(m: int) -> float:
     yr_idx = (m - 1) // 12
     return monthly_sip * ((1 + g) ** yr_idx)
@@ -195,10 +212,10 @@ with col_output:
     
     # KPIs
     k1, k2, k3, k4 = st.columns(4)
-    k1.metric("Lump-sum Invested", f"₹ {total_lumpsum_contrib:,.0f}")
-    k2.metric("Total SIP Invested", f"₹ {total_sip_contrib:,.0f}")
-    k3.metric("Estimated Value", f"₹ {future_value:,.0f}")
-    k4.metric("Wealth Gain (Returns)", f"₹ {returns:,.0f}")
+    k1.metric("Lump-sum Invested", format_indian_currency(total_lumpsum_contrib))
+    k2.metric("Total SIP Invested", format_indian_currency(total_sip_contrib))
+    k3.metric("Estimated Value", format_indian_currency(future_value))
+    k4.metric("Wealth Gain (Returns)", format_indian_currency(returns))
 
     st.markdown("") # Spacer
 
@@ -213,13 +230,15 @@ with col_output:
             color="Type",
             color_discrete_map={"Principal": "#6B5B45", "Returns": "#BB9D63"} # muted brown vs bright gold
         )
-        fig_pie.update_traces(textposition="outside", textinfo="label+percent")
+        fig_pie.update_traces(textposition="outside", textinfo="percent+label")
         fig_pie.update_layout(
-            margin=dict(t=10, b=10, l=10, r=10),
+            margin=dict(t=20, b=50, l=40, r=40),
+            height=300,
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
-            font=dict(color="#F0EAD6", family="Montserrat"),
-            showlegend=False
+            font=dict(color="#F0EAD6", family="Montserrat", size=10),
+            showlegend=True,
+            legend=dict(orientation="h", y=-0.2, x=0.5, xanchor="center")
         )
         st.plotly_chart(fig_pie, use_container_width=True)
 
@@ -233,10 +252,11 @@ with col_output:
             )
             line_fig.update_layout(
                 margin=dict(t=10, b=0, l=0, r=0),
+                height=300,
                 legend=dict(orientation="h", y=1.02, x=1, xanchor="right"),
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
-                font=dict(color="#A89F91", family="Montserrat"),
+                font=dict(color="#A89F91", family="Montserrat", size=10),
                 xaxis=dict(showgrid=False),
                 yaxis=dict(showgrid=True, gridcolor="rgba(212, 175, 55, 0.1)"),
                 hovermode="x unified"
