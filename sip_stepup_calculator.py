@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import streamlit.components.v1 as components
 
 # ---------------- CONFIGURATION ----------------
 st.set_page_config(
@@ -66,6 +67,31 @@ st.markdown("""
         color: white !important;
     }
     
+    /* Input Fields Border on Focus */
+    div[data-baseweb="input"]:focus-within,
+    div[data-baseweb="select"]:focus-within > div,
+    .focused, /* Catch-all for Streamlit's JS-applied focus class */
+    [class*="focused"] {
+        border-color: #BB9D63 !important;
+        box-shadow: 0 0 0 1px #BB9D63 !important;
+    }
+    
+    /* Number Input +/- Buttons */
+    button[kind="secondary"] {
+        border-color: rgba(212, 175, 55, 0.3) !important;
+        color: #F0EAD6 !important;
+    }
+    button[kind="secondary"]:hover, button[kind="secondary"]:active, button[kind="secondary"]:focus {
+        border-color: #BB9D63 !important;
+        color: #BB9D63 !important;
+        background-color: rgba(187, 157, 99, 0.1) !important;
+    }
+    /* Specific target for the active/clicked state of buttons to kill the orange */
+    button[data-testid="baseButton-secondary"]:active {
+        border-color: #BB9D63 !important;
+        color: #BB9D63 !important;
+    }
+    
     /* Input Containers - "Glass" Effect */
     div[data-testid="stVerticalBlockBorderWrapper"] > div > div {
         background-color: rgba(40, 30, 20, 0.6) !important; /* Semi-transparent brown */
@@ -90,6 +116,7 @@ st.markdown("""
         font-size: 0.7rem;
         letter-spacing: 1px;
     }
+    div[data-testid="stMetric"] div[data-testid="stMetricValue"] {
         color: #FDFBF7 !important; /* Off-White */
         font-family: 'Montserrat', sans-serif;
         font-weight: 500;
@@ -97,13 +124,54 @@ st.markdown("""
         text-shadow: 0 0 10px rgba(212, 175, 55, 0.2); /* Slight Gold Glow */
     }
 
-    /* Active Elements (Sliders/Checks) */
-    div[role="slider"] {
-        background-color: #BB9D63 !important;
+    /* Slider Active/Focused State */
+    div[role="slider"]:focus {
+        box-shadow: 0 0 0 2px #BB9D63 !important; /* Replace default focus ring */
     }
+
+    /* Toggle Switches (Checkbox) */
+    /* background of the toggle switch when active */
+    div[data-baseweb="checkbox"] div[data-testid="stCheckbox"] label span[class*="checked"] {
+        background-color: #BB9D63 !important;
+        border-color: #BB9D63 !important;
+    }
+    /* The thumb of the toggle usually inherits or is white, ensuring the track is correct */
+    label[data-baseweb="checkbox"] > div:first-child {
+         background-color: #BB9D63 !important;
+    }
+    /* Targeting the specific Streamlit toggle structure more generally to catch variations */
+    .stToggle {
+        border-color: #BB9D63 !important;
+    }
+
     /* Slider Filled Track */
     div[data-baseweb="slider"] > div > div > div:first-child {
         background-color: #BB9D63 !important;
+    }
+    
+    /* OVERRIDES FOR USER REPORTED ISSUES */
+    
+    /* 1. Button Hover/Focus (Red Background Removal) */
+    button:hover, button:focus, button:active, 
+    button:hover:enabled, button:focus:enabled {
+        background-color: rgba(187, 157, 99, 0.1) !important;
+        border-color: #BB9D63 !important;
+        color: #BB9D63 !important;
+        outline: none !important;
+        box-shadow: none !important;
+    }
+    
+    /* 2. Slider Track Gradient (The .st-c3 linear-gradient) */
+    /* Targeting the track container specifically to override the background image/gradient */
+    div[data-baseweb="slider"] > div > div {
+        background: #483C32 !important; /* Dark brown background for empty part */
+    }
+    
+    /* 3. Slider Thumb (The .st-emotion-cache-11xx4re) */
+    div[role="slider"] {
+        background-color: #BB9D63 !important;
+        border: none !important;
+        box-shadow: 0 0 5px rgba(187, 157, 99, 0.5) !important;
     }
     /* Slider Value Label (The number above the slider) */
     div[data-baseweb="slider"] div {
@@ -123,10 +191,20 @@ st.markdown("""
         font-weight: 500;
     }
     
-    /* Hide Streamlit components */
+    /* HIDE STREAMLIT BRANDING / BADGE (CSS Method) */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
+    
+    /* Targeting the specific Viewer Badge classes from user request */
+    ._viewerBadge_nim44_23, 
+    ._container_gzau3_1, 
+    a[href="https://streamlit.io/cloud"] {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }
     
 </style>
 """, unsafe_allow_html=True)
@@ -265,3 +343,34 @@ with col_output:
 
     with st.expander("Show monthly table & chart"):
         st.dataframe(df, hide_index=True, use_container_width=True)
+
+
+# ---------------- BADGE REMOVAL SCRIPT ----------------
+components.html(
+    """
+    <script>
+    // aggressively check for the badge every 1ms for 5 seconds
+    const intervalId = setInterval(() => {
+        const badge = window.parent.document.querySelector('._viewerBadge_nim44_23');
+        const badgeContainer = window.parent.document.querySelector('._container_gzau3_1');
+        const badgeLink = window.parent.document.querySelector('a[href*="streamlit.io/cloud"]');
+        
+        if (badge) {
+            badge.remove();
+            console.log("Badge removed by JS");
+        }
+        if (badgeContainer) {
+            badgeContainer.remove();
+        }
+        if (badgeLink) {
+            badgeLink.remove();
+        }
+    }, 1);
+
+    // Stop checking after 5 seconds to save resources
+    setTimeout(() => clearInterval(intervalId), 5000);
+    </script>
+    """,
+    height=0,
+    width=0
+)
