@@ -196,14 +196,21 @@ st.markdown("""
     footer {visibility: hidden;}
     header {visibility: hidden;}
     
-    /* Targeting the specific Viewer Badge classes from user request */
+    /* Targeting the specific Viewer Badge classes from user request + generic */
     ._viewerBadge_nim44_23, 
     ._container_gzau3_1, 
-    a[href="https://streamlit.io/cloud"] {
+    .viewerBadge_container__1QSob,
+    div[data-testid="stDecoration"],
+    a[href*="streamlit.io/cloud"] {
         display: none !important;
         visibility: hidden !important;
         opacity: 0 !important;
         pointer-events: none !important;
+        height: 0 !important;
+        width: 0 !important;
+        position: absolute !important;
+        top: -9999px !important;
+        left: -9999px !important;
     }
     
 </style>
@@ -345,30 +352,46 @@ with col_output:
         st.dataframe(df, hide_index=True, use_container_width=True)
 
 
-# ---------------- BADGE REMOVAL SCRIPT ----------------
+# ---------------- BADGE REMOVAL SCRIPT (ROBUST) ----------------
 components.html(
     """
     <script>
-    // aggressively check for the badge every 1ms for 5 seconds
-    const intervalId = setInterval(() => {
-        const badge = window.parent.document.querySelector('._viewerBadge_nim44_23');
-        const badgeContainer = window.parent.document.querySelector('._container_gzau3_1');
-        const badgeLink = window.parent.document.querySelector('a[href*="streamlit.io/cloud"]');
+    function removeBadge() {
+        const doc = window.parent.document;
+        // Target all possible selectors
+        const selectors = [
+            '._viewerBadge_nim44_23',
+            '._container_gzau3_1',
+            'a[href*="streamlit.io/cloud"]',
+            '[data-testid="stDecoration"]',
+            'div[class*="viewerBadge"]' 
+        ];
         
-        if (badge) {
-            badge.remove();
-            console.log("Badge removed by JS");
-        }
-        if (badgeContainer) {
-            badgeContainer.remove();
-        }
-        if (badgeLink) {
-            badgeLink.remove();
-        }
-    }, 1);
+        selectors.forEach(selector => {
+            const elements = doc.querySelectorAll(selector);
+            elements.forEach(el => {
+                if(el) {
+                    el.style.display = 'none';
+                    el.style.visibility = 'hidden';
+                    el.remove();
+                    // console.log("Removed:", selector);
+                }
+            });
+        });
+    }
 
-    // Stop checking after 5 seconds to save resources
-    setTimeout(() => clearInterval(intervalId), 5000);
+    // 1. Immediate interval
+    const intervalId = setInterval(removeBadge, 50);
+
+    // 2. MutationObserver (The Permanent Fix)
+    const observer = new MutationObserver((mutations) => {
+        removeBadge();
+    });
+    
+    observer.observe(window.parent.document.body, {childList: true, subtree: true});
+
+    // Stop interval after 30s to save resources, but keep observer
+    setTimeout(() => clearInterval(intervalId), 30000);
     </script>
     """,
     height=0,
